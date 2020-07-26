@@ -2,26 +2,14 @@ use std::fs;
 use std::thread;
 use std::io::prelude::*;
 use std::time::Duration;
-use std::net::{TcpListener, TcpStream};
+use std::net::{TcpStream};
 
 const GET_REQ: &[u8; 16] = b"GET / HTTP/1.1\r\n";
 const HTTP_OK: &str = "HTTP/1.1 200 OK\r\n\r\n";
 const HTTP_NF: &str = "HTTP/1.1 404 NOT FOUND\r\n\r\n";
 const SLEEP: &[u8; 21] = b"GET /sleep HTTP/1.1\r\n";
 
-fn main() -> std::io::Result<()> {
-  let listener = TcpListener::bind("127.0.0.1:7878")?;
-
-  for stream in listener.incoming() {
-    let stream = stream?;
-
-    handle_connection(stream)?;
-  }
-
-  Ok(())
-}
-
-fn handle_connection(mut stream: TcpStream) -> std::io::Result<()> {
+pub fn handle_connection(mut stream: TcpStream) -> std::io::Result<()> {
   let mut buff = [0; 1024];
 
   stream.read(&mut buff)?;
