@@ -8,10 +8,10 @@ edition = "2018"
 
 [lib]
 name = "web_server"
-path = "src/lib.rs"
+path = "src/lib/lib.rs"
 
 [[bin]]
 name = "multithreaded_web_server"
-path = "src/bin.rs"
+path = "src/bin/main.rs"
 
 [dependencies]

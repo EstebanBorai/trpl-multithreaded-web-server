@@ -4,6 +4,10 @@ use std::io::prelude::*;
 use std::time::Duration;
 use std::net::{TcpStream};
 
+mod thread_pool;
+
+pub use thread_pool::*;
+
 const GET_REQ: &[u8; 16] = b"GET / HTTP/1.1\r\n";
 const HTTP_OK: &str = "HTTP/1.1 200 OK\r\n\r\n";
 const HTTP_NF: &str = "HTTP/1.1 404 NOT FOUND\r\n\r\n";
