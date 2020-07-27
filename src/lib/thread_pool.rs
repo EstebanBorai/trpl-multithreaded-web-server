@@ -1,7 +1,14 @@
 use std::thread;
+use std::sync::mpsc;
+use std::sync::{Arc, Mutex};
+
+pub type WorkerReceiver = Arc<Mutex<mpsc::Receiver<Job>>>;
+
+pub type Job = Box<dyn FnOnce() + Send + 'static>;
 
 pub struct ThreadPool {
-  threads: Vec<thread::JoinHandle<()>>,
+  workers: Vec<Worker>,
+  sender: mpsc::Sender<Job>,
 }
 
 /// Represents a ThreadPool creation error
@@ -24,20 +31,47 @@ impl ThreadPool {
       });
     }
 
+    let (sender, receiver) = mpsc::channel::<Job>();
+
+    let receiver = Arc::new(Mutex::new(receiver));
+
     // preallocate space in the vector for `size`
-    let mut threads = Vec::with_capacity(size);
+    let mut workers = Vec::with_capacity(size);
 
-    for _ in 0..size {
-
+    for id in 0..size {
+      workers.push(Worker::new(id, Arc::clone(&receiver)));
     }
 
     Ok(ThreadPool {
-      threads
+      workers,
+      sender
     })
   }
 
   pub fn execute<F>(&self, f: F)
   where
     F: FnOnce() + Send + 'static,
-  {}
+  {
+    let job = Box::new(f);
+
+    self.sender.send(job).unwrap();
+  }
+}
+
+struct Worker {
+  id: usize,
+  thread: thread::JoinHandle<()>,
+}
+
+impl Worker {
+  fn new(id: usize, receiver: WorkerReceiver) -> Worker {
+    let thread = thread::spawn(|| {
+      receiver;
+    });
+
+    Worker {
+      id,
+      thread
+    }
+  }
 }
