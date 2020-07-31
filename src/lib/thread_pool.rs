@@ -12,6 +12,7 @@ pub struct ThreadPool {
 }
 
 /// Represents a ThreadPool creation error
+#[derive(Debug)]
 pub struct PoolCreationError {
   pub message: String,
 }
@@ -25,7 +26,7 @@ impl ThreadPool {
   ///
   /// The `new` function will panic if the size is zero.
   pub fn new(size: usize) -> Result<ThreadPool, PoolCreationError> {
-    if !size > 0 {
+    if size == 0 {
       return Err(PoolCreationError {
         message: format!("Invalid ThreadPool size provided {}", size)
       });
@@ -65,8 +66,12 @@ struct Worker {
 
 impl Worker {
   fn new(id: usize, receiver: WorkerReceiver) -> Worker {
-    let thread = thread::spawn(|| {
-      receiver;
+    let thread = thread::spawn(move || {
+      while let Ok(job) = receiver.lock().unwrap().recv() {
+        println!("Worker {} got a job; executing", id);
+
+        job();
+      }
     });
 
     Worker {
